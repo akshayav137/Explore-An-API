@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Which Dog Are You?</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            font-family: Arial, sans-serif;
+
+            background: linear-gradient(
+                135deg,
+                #fff4e6,
+                #ffd8a8
+            );
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quiz-container {
+
+            width: 90%;
+            max-width: 600px;
+
+            background: white;
+
+            padding: 35px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,0.15);
+
+            text-align: center;
+        }
+
+        h1 {
+            color: #5c3d2e;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .progress-container {
+
+            background: #eeeeee;
+
+            height: 10px;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            margin-bottom: 30px;
+        }
+
+        #progressBar {
+
+            height: 100%;
+
+            width: 0%;
+
+            background: #e89b4f;
+
+            transition: width 0.3s;
+        }
+
+        #question {
+
+            font-size: 22px;
+
+            color: #333;
+
+            margin-bottom: 25px;
+        }
+
+        #answers {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+        }
+
+        .answer-button {
+
+            padding: 14px;
+
+            border: 2px solid #e89b4f;
+
+            background: white;
+
+            border-radius: 12px;
+
+            font-size: 16px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .answer-button:hover {
+
+            background: #fff0df;
+
+            transform: translateY(-2px);
+        }
+
+        #result {
+
+            display: none;
+        }
+
+        #dogImage {
+
+            width: 100%;
+
+            max-height: 330px;
+
+            object-fit: cover;
+
+            border-radius: 15px;
+
+            margin-top: 15px;
+        }
+
+        #dogBreed {
+
+            font-size: 32px;
+
+            color: #5c3d2e;
+
+            margin-bottom: 5px;
+        }
+
+        #traits {
+
+            color: #e07a2d;
+
+            font-weight: bold;
+
+            margin-bottom: 20px;
+        }
+
+        #description {
+
+            line-height: 1.6;
+
+            color: #555;
+        }
+
+        .retake-button {
+
+            margin-top: 25px;
+
+            padding: 13px 25px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #e89b4f;
+
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        .retake-button:hover {
+
+            background: #cc7d32;
+        }
+
+        #loading {
+
+            font-size: 18px;
+
+            color: #777;
+
+            margin: 20px;
+        }
+
+        .api-label {
+
+            font-size: 13px;
+
+            color: #999;
+
+            margin-top: 15px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="quiz-container">
+
+
+    <!-- QUIZ SECTION -->
+
+    <div id="quiz">
+
+        <h1>🐾 Which Dog Are You?</h1>
+
+        <p class="subtitle">
+            Answer 5 questions to discover your canine personality!
+        </p>
+
+
+        <div class="progress-container">
+
+            <div id="progressBar"></div>
+
+        </div>
+
+
+        <h2 id="question"></h2>
+
+
+        <div id="answers"></div>
+
+
+    </div>
+
+
+
+    <!-- RESULT SECTION -->
+
+    <div id="result">
+
+        <h1>Your Dog Personality Is...</h1>
+
+        <h2 id="dogBreed"></h2>
+
+        <p id="traits"></p>
+
+        <div id="loading">
+            Finding your dog...
+        </div>
+
+        <img
+            id="dogImage"
+            src=""
+            alt="Dog personality result"
+        >
+
+        <p id="description"></p>
+
+
+        <p class="api-label">
+            Dog image retrieved using the Dog CEO API
+        </p>
+
+
+        <button
+            class="retake-button"
+            onclick="restartQuiz()"
+        >
+            Retake Quiz
+        </button>
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+// ---------------------------------------------------
+// QUESTIONS
+// ---------------------------------------------------
+
+
+const questions = [
+
+    {
+        question:
+            "What does your perfect Saturday look like?",
+
+        answers: [
+
+            {
+                text: "Going on an adventure",
+                type: "adventurous"
+            },
+
+            {
+                text: "Spending time with friends",
+                type: "social"
+            },
+
+            {
+                text: "Relaxing at home",
+                type: "relaxed"
+            },
+
+            {
+                text: "Learning or creating something",
+                type: "smart"
+            },
+
+            {
+                text: "Getting things done",
+                type: "focused"
+            }
+
+        ]
+    },
+
+
+    {
+        question:
+            "Your friends would describe you as...",
+
+        answers: [
+
+            {
+                text: "Energetic",
+                type: "adventurous"
+            },
+
+            {
+                text: "Friendly",
+                type: "social"
+            },
+
+            {
+                text: "Funny",
+                type: "relaxed"
+            },
+
+            {
+                text: "Curious",
+                type: "smart"
+            },
+
+            {
+                text: "Dependable",
+                type: "focused"
+            }
+
+        ]
+    },
+
+
+    {
+        question:
+            "Pick your ideal vacation.",
+
+        answers: [
+
+            {
+                text: "Mountain adventure",
+                type: "adventurous"
+            },
+
+            {
+                text: "Trip with all my friends",
+                type: "social"
+            },
+
+            {
+                text: "Relaxing beach vacation",
+                type: "relaxed"
+            },
+
+            {
+                text: "Exploring a historic city",
+                type: "smart"
+            },
+
+            {
+                text: "A perfectly planned road trip",
+                type: "focused"
+            }
+
+        ]
+    },
+
+
+    {
+        question:
+            "What do you do when you face a problem?",
+
+        answers: [
+
+            {
+                text: "Jump in and figure it out",
+                type: "adventurous"
+            },
+
+            {
+                text: "Ask someone for advice",
+                type: "social"
+            },
+
+            {
+                text: "Don't stress too much about it",
+                type: "relaxed"
+            },
+
+            {
+                text: "Analyze every possible solution",
+                type: "smart"
+            },
+
+            {
+                text: "Make a plan and follow it",
+                type: "focused"
+            }
+
+        ]
+    },
+
+
+    {
+        question:
+            "Choose something you value most.",
+
+        answers: [
+
+            {
+                text: "Freedom",
+                type: "adventurous"
+            },
+
+            {
+                text: "Friendship",
+                type: "social"
+            },
+
+            {
+                text: "Comfort",
+                type: "relaxed"
+            },
+
+            {
+                text: "Knowledge",
+                type: "smart"
+            },
+
+            {
+                text: "Success",
+                type: "focused"
+            }
+
+        ]
+    }
+
+];
+
+
+
+// ---------------------------------------------------
+// SCORES
+// ---------------------------------------------------
+
+
+let scores = {
+
+    adventurous: 0,
+    social: 0,
+    relaxed: 0,
+    smart: 0,
+    focused: 0
+
+};
+
+
+let currentQuestion = 0;
+
+
+
+// ---------------------------------------------------
+// DISPLAY QUESTION
+// ---------------------------------------------------
+
+
+function displayQuestion() {
+
+
+    const questionElement =
+        document.getElementById("question");
+
+
+    const answersElement =
+        document.getElementById("answers");
+
+
+    const progressBar =
+        document.getElementById("progressBar");
+
+
+    questionElement.textContent =
+        questions[currentQuestion].question;
+
+
+    answersElement.innerHTML = "";
+
+
+    questions[currentQuestion].answers.forEach(
+        function(answer) {
+
+
+            const button =
+                document.createElement("button");
+
+
+            button.textContent = answer.text;
+
+
+            button.className = "answer-button";
+
+
+            button.onclick = function() {
+
+                chooseAnswer(answer.type);
+
+            };
+
+
+            answersElement.appendChild(button);
+
+        }
+    );
+
+
+    const progress =
+        (currentQuestion / questions.length) * 100;
+
+
+    progressBar.style.width =
+        progress + "%";
+
+}
+
+
+
+// ---------------------------------------------------
+// HANDLE ANSWER
+// ---------------------------------------------------
+
+
+function chooseAnswer(type) {
+
+
+    scores[type]++;
+
+
+    currentQuestion++;
+
+
+    if (currentQuestion < questions.length) {
+
+        displayQuestion();
+
+    }
+
+    else {
+
+        showResult();
+
+    }
+
+}
+
+
+
+// ---------------------------------------------------
+// FIND RESULT
+// ---------------------------------------------------
+
+
+function showResult() {
+
+
+    document.getElementById("quiz").style.display =
+        "none";
+
+
+    document.getElementById("result").style.display =
+        "block";
+
+
+    let highestType = "social";
+
+    let highestScore = -1;
+
+
+    for (let type in scores) {
+
+        if (scores[type] > highestScore) {
+
+            highestScore = scores[type];
+
+            highestType = type;
+
+        }
+
+    }
+
+
+    const dogResults = {
+
+
+        adventurous: {
+
+            name: "Siberian Husky",
+
+            traits:
+                "Adventurous • Energetic • Bold",
+
+            description:
+                "You love excitement, new experiences, and exploring what is around you. You bring energy wherever you go and you are always ready for the next adventure.",
+
+            apiURL:
+                "https://dog.ceo/api/breed/husky/images/random"
+               // https://dog.ceo/api/breed/THISISNOTADOG/images/random   //try to break it test
+        },
+
+
+        social: {
+
+            name: "Golden Retriever",
+
+            traits:
+                "Friendly • Loyal • Social",
+
+            description:
+                "You enjoy being around people and making others feel welcome. You are friendly, dependable, and happiest when you can share experiences with people you care about.",
+
+            apiURL:
+                "https://dog.ceo/api/breed/retriever/golden/images/random"
+
+        },
+
+
+        relaxed: {
+
+            name: "Pug",
+
+            traits:
+                "Relaxed • Funny • Easygoing",
+
+            description:
+                "You know how to enjoy the little things. You have a fun personality, do not take everything too seriously, and appreciate having time to relax.",
+
+            apiURL:
+                "https://dog.ceo/api/breed/pug/images/random"
+
+        },
+
+
+        smart: {
+
+            name: "Border Collie",
+
+            traits:
+                "Curious • Clever • Creative",
+
+            description:
+                "You enjoy solving problems, learning new things, and understanding how things work. You are naturally curious and usually have something interesting on your mind.",
+
+            apiURL:
+                "https://dog.ceo/api/breed/collie/border/images/random"
+
+        },
+
+
+        focused: {
+
+            name: "German Shepherd",
+
+            traits:
+                "Focused • Confident • Dependable",
+
+            description:
+                "You like having goals and working toward them. You are dependable, determined, and usually prefer having a plan instead of leaving everything to chance.",
+
+            apiURL:
+                "https://dog.ceo/api/breed/shepherd/german/images/random"
+
+        }
+
+    };
+
+
+    const dog = dogResults[highestType];
+
+
+    document.getElementById("dogBreed").textContent =
+        dog.name;
+
+
+    document.getElementById("traits").textContent =
+        dog.traits;
+
+
+    document.getElementById("description").textContent =
+        dog.description;
+
+
+    getDogImage(dog.apiURL);
+
+}
+
+
+
+// ---------------------------------------------------
+// API REQUEST
+// ---------------------------------------------------
+
+
+async function getDogImage(apiURL) {
+
+
+    const loading =
+        document.getElementById("loading");
+
+
+    const dogImage =
+        document.getElementById("dogImage");
+
+
+    loading.style.display = "block";
+
+    dogImage.style.display = "none";
+
+
+    try {
+
+
+        const response =
+            await fetch(apiURL);
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "The API request was unsuccessful."
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (data.status !== "success") {
+
+            throw new Error(
+                "The API did not return an image."
+            );
+
+        }
+
+
+        dogImage.src = data.message;
+
+
+        dogImage.onload = function() {
+
+            loading.style.display = "none";
+
+            dogImage.style.display = "block";
+
+        };
+
+
+    }
+
+    catch (error) {
+
+
+        loading.textContent =
+            "Sorry! We could not load your dog image. Please check your internet connection and try again.";
+
+
+        console.error(error);
+
+    }
+
+}
+
+
+
+// ---------------------------------------------------
+// RESTART QUIZ
+// ---------------------------------------------------
+
+
+function restartQuiz() {
+
+
+    currentQuestion = 0;
+
+
+    scores = {
+
+        adventurous: 0,
+        social: 0,
+        relaxed: 0,
+        smart: 0,
+        focused: 0
+
+    };
+
+
+    document.getElementById("result").style.display =
+        "none";
+
+
+    document.getElementById("quiz").style.display =
+        "block";
+
+
+    document.getElementById("dogImage").src = "";
+
+
+    document.getElementById("loading").textContent =
+        "Finding your dog...";
+
+
+    displayQuestion();
+
+}
+
+
+
+// START QUIZ
+
+displayQuestion();
+
+
+</script>
+
+
+</body>
+
+</html>
